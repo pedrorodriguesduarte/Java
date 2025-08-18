@@ -35,10 +35,7 @@ public class Comercio {
         System.out.println("===========================");
     }
 
-    /** Imprime o menu principal, lê a opção do usuário e a retorna (int).
-     * Perceba que poderia haver uma melhor modularização com a criação de uma classe Menu.
-     * @return Um inteiro com a opção do usuário.
-    */
+    /** Imprime o menu principal, lê a opção do usuário e a retorna (int). */
     static int menu(){
         cabecalho();
         System.out.println("1 - Listar todos os produtos");
@@ -50,10 +47,7 @@ public class Comercio {
     }
 
     /**
-     * Lê os dados de um arquivo texto e retorna um vetor de produtos. Arquivo no formato
-     * N  (quantiade de produtos) <br/>
-     * tipo; descrição;preçoDeCusto;margemDeLucro;[dataDeValidade] <br/>
-     * Deve haver uma linha para cada um dos produtos. Retorna um vetor vazio em caso de problemas com o arquivo.
+     * Lê os dados de um arquivo texto e retorna um vetor de produtos.
      * @param nomeArquivoDados Nome do arquivo de dados a ser aberto.
      * @return Um vetor com os produtos carregados, ou vazio em caso de problemas de leitura.
      */
@@ -61,16 +55,29 @@ public class Comercio {
         Produto[] vetorProdutos = new Produto[MAX_NOVOS_PRODUTOS];
         quantosProdutos = 0;
 
-        try (Scanner arquivo = new Scanner(new File(nomeArquivoDados), "UTF-8")) {
-            int n = Integer.parseInt(arquivo.nextLine().trim());
+        try (Scanner arquivo = new Scanner(new File(nomeArquivoDados), Charset.forName("UTF-8"))) {
+            if(!arquivo.hasNextLine()){
+                System.out.println("Arquivo vazio.");
+                return new Produto[MAX_NOVOS_PRODUTOS];
+            }
+
+            // primeira linha deve ser apenas o número
+            String primeira = arquivo.nextLine().trim();
+            int n = Integer.parseInt(primeira);
             vetorProdutos = new Produto[n + MAX_NOVOS_PRODUTOS];
 
             for (int i = 0; i < n; i++) {
                 if (arquivo.hasNextLine()) {
-                    String linha = arquivo.nextLine();
+                    String linha = arquivo.nextLine().trim();
+
+                    // pula linhas em branco
+                    if(linha.isEmpty()) continue;
+
                     Produto p = Produto.criarDoTexto(linha);
                     if (p != null) {
                         vetorProdutos[quantosProdutos++] = p;
+                    } else {
+                        System.out.println("Linha ignorada (formato inválido): " + linha);
                     }
                 }
             }
@@ -96,17 +103,15 @@ public class Comercio {
         }
     }
 
-    /** Localiza um produto no vetor de cadastrados, a partir do nome, e imprime seus dados. 
-     *  A busca não é sensível ao caso.  Em caso de não encontrar o produto, imprime mensagem padrão */
+    /** Localiza um produto no vetor de cadastrados a partir do nome */
     static void localizarProdutos(){
         System.out.print("Digite o nome do produto a procurar: ");
         String nome = teclado.nextLine().trim();
 
         boolean encontrado = false;
         for(int i=0; i<quantosProdutos; i++){
-            if(produtosCadastrados[i]!=null && 
-               produtosCadastrados[i].equals(new ProdutoNaoPerecivel(nome, 1.0))) {
-                // crio um "mock" só para comparar pela descrição
+            if(produtosCadastrados[i]!=null &&
+               produtosCadastrados[i].descricao.equalsIgnoreCase(nome)) {
                 System.out.println("Produto encontrado: " + produtosCadastrados[i]);
                 encontrado = true;
                 break;
@@ -118,12 +123,7 @@ public class Comercio {
         }
     }
 
-    /**
-     * Rotina de cadastro de um novo produto: pergunta ao usuário o tipo do produto, lê os dados correspondentes,
-     * cria o objeto adequado de acordo com o tipo, inclui no vetor. Este método pode ser feito com um nível muito 
-     * melhor de modularização. As diversas fases da lógica poderiam ser encapsuladas em outros métodos. 
-     * Uma sugestão de melhoria mais significativa poderia ser o uso de padrão Factory Method para criação dos objetos.
-     */
+    /** Rotina de cadastro de um novo produto */
     static void cadastrarProduto(){
         try {
             System.out.print("Digite o tipo do produto (1 = Não perecível, 2 = Perecível): ");
@@ -165,7 +165,7 @@ public class Comercio {
     }
 
     /**
-     * Salva os dados dos produtos cadastrados no arquivo csv informado. Sobrescreve todo o conteúdo do arquivo.
+     * Salva os dados dos produtos cadastrados no arquivo csv informado.
      * @param nomeArquivo Nome do arquivo a ser gravado.
      */
     public static void salvarProdutos(String nomeArquivo){
@@ -184,8 +184,8 @@ public class Comercio {
     }
 
     public static void main(String[] args) throws Exception {
-        teclado = new Scanner(System.in, Charset.forName("ISO-8859-2"));
-        nomeArquivoDados = "dadosProdutos.csv";
+        teclado = new Scanner(System.in, Charset.forName("UTF-8"));
+        nomeArquivoDados = "/Users/pedroduarte/Downloads/PASTA JAVA/AED-II_Proj0b_ArqTexto_G2_PMG_Manha/Templates p alunos/dadosProdutos.csv";
         produtosCadastrados = lerProdutos(nomeArquivoDados);
         int opcao = -1;
         do{
